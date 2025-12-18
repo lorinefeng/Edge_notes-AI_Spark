@@ -27,17 +27,17 @@ jobs:
         run: npx opennextjs-cloudflare build
 
       - name: Deploy to Cloudflare Workers
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy
-          # These secrets will be uploaded to the Worker
-          secrets: |
-            GITHUB_CLIENT_ID
-            GITHUB_CLIENT_SECRET
-            JWT_SECRET
         env:
-          GITHUB_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
-          GITHUB_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          GH_CLIENT_ID: ${{ secrets.GH_CLIENT_ID }}
+          GH_CLIENT_SECRET: ${{ secrets.GH_CLIENT_SECRET }}
           JWT_SECRET: ${{ secrets.JWT_SECRET }}
+        run: |
+          # Upload secrets manually
+          echo $GH_CLIENT_ID | npx wrangler secret put GITHUB_CLIENT_ID
+          echo $GH_CLIENT_SECRET | npx wrangler secret put GITHUB_CLIENT_SECRET
+          echo $JWT_SECRET | npx wrangler secret put JWT_SECRET
+          
+          # Deploy
+          npx wrangler deploy
