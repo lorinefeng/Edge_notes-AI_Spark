@@ -51,12 +51,20 @@ export async function polishNote(
 
   const data = await response.json() as any;
 
-  // 1. Check for standard Anthropic format
-  if (data.content && Array.isArray(data.content) && data.content[0]?.text) {
-    return {
-      polishedContent: data.content[0].text,
-      usage: data.usage || { input_tokens: 0, output_tokens: 0 },
-    };
+  // 1. Check for standard Anthropic format (and handle string/object content)
+  if (data.content && Array.isArray(data.content) && data.content.length > 0) {
+    const firstBlock = data.content[0];
+    if (typeof firstBlock === "string") {
+       return {
+         polishedContent: firstBlock,
+         usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+       };
+    } else if (firstBlock && typeof firstBlock === "object" && "text" in firstBlock) {
+       return {
+         polishedContent: firstBlock.text,
+         usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+       };
+    }
   }
 
   // 2. Fallback: Check for OpenAI format (choices[0].message.content)
