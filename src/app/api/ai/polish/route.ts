@@ -5,8 +5,6 @@ import { userQuotas } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { polishNote, PolishStyle } from "@/lib/ai";
 
-export const runtime = "edge";
-
 export async function POST(req: NextRequest) {
   const userId = req.headers.get("x-user-id");
   if (!userId) {

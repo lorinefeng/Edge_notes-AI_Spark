@@ -8,8 +8,6 @@ import { ArrowLeft, CreditCard, CheckCircle, Zap, Wallet } from "lucide-react";
 import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 
-export const runtime = "edge";
-
 async function addCredits(formData: FormData) {
   "use server";
   const amount = parseInt(formData.get("amount") as string);
