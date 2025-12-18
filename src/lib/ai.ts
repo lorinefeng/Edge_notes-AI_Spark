@@ -49,17 +49,35 @@ export async function polishNote(
     throw new Error(`AI API request failed: ${response.status} ${response.statusText}`);
   }
 
-  const data = await response.json() as {
-    content: { text: string }[];
-    usage: { input_tokens: number; output_tokens: number };
-  };
+  const data = await response.json() as any;
 
-  if (!data.content || !data.content[0] || !data.content[0].text) {
-    throw new Error("Invalid response format from AI API");
+  // 1. Check for standard Anthropic format
+  if (data.content && Array.isArray(data.content) && data.content[0]?.text) {
+    return {
+      polishedContent: data.content[0].text,
+      usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+    };
   }
 
-  return {
-    polishedContent: data.content[0].text,
-    usage: data.usage,
-  };
+  // 2. Fallback: Check for OpenAI format (choices[0].message.content)
+  // Some "compatible" proxies might mix this up
+  if (data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
+    return {
+      polishedContent: data.choices[0].message.content,
+      usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+    };
+  }
+
+  // 3. Fallback: Check for MiniMax native format (reply)
+  if (data.reply) {
+      return {
+          polishedContent: data.reply,
+          usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+      };
+  }
+
+  // If we get here, the format is unrecognized.
+  console.error("Unknown AI Response Format:", JSON.stringify(data, null, 2));
+  const receivedKeys = Object.keys(data).join(", ");
+  throw new Error(`Invalid response format from AI API. Received keys: [${receivedKeys}]. Check server logs for full payload.`);
 }
