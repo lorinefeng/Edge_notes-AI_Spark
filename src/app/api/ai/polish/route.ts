@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
   }
 
   try {
-    const { content, style } = await req.json();
+    const { content, style, customInstruction } = await req.json();
     if (!content || !style) {
       return NextResponse.json({ error: "Missing content or style" }, { status: 400 });
     }
@@ -67,7 +67,8 @@ export async function POST(req: NextRequest) {
         style as PolishStyle,
         env.ANTHROPIC_API_KEY,
         env.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic",
-        env.ANTHROPIC_MODEL || "MiniMax-M2"
+        env.ANTHROPIC_MODEL || "MiniMax-M2",
+        customInstruction
       );
 
       // Update Usage

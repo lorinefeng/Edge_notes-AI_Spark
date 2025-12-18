@@ -13,6 +13,7 @@ interface AIPolishProps {
 export function AIPolish({ currentContent, onApply }: AIPolishProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [style, setStyle] = useState("concise");
+  const [customInstruction, setCustomInstruction] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<string | null>(null);
   const router = useRouter();
@@ -122,13 +123,13 @@ export function AIPolish({ currentContent, onApply }: AIPolishProps) {
             <div className="space-y-6">
                <div>
                  <label className="block text-sm font-medium text-foreground mb-2">Choose Style</label>
-                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                    {['concise', 'academic', 'colloquial', 'formal'].map((s) => (
+                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                    {['concise', 'academic', 'colloquial', 'formal', 'custom'].map((s) => (
                       <button
                         key={s}
                         type="button"
                         onClick={() => setStyle(s)}
-                        className={`px-4 py-3 rounded-lg border text-sm font-medium capitalize transition-all ${
+                        className={`px-3 py-3 rounded-lg border text-sm font-medium capitalize transition-all ${
                           style === s 
                             ? "border-purple-600 bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-300 ring-1 ring-purple-600" 
                             : "border-input hover:bg-muted/50 text-foreground"
@@ -138,6 +139,17 @@ export function AIPolish({ currentContent, onApply }: AIPolishProps) {
                       </button>
                     ))}
                  </div>
+                 
+                 {style === 'custom' && (
+                   <div className="mt-3">
+                     <textarea
+                       value={customInstruction}
+                       onChange={(e) => setCustomInstruction(e.target.value)}
+                       placeholder="Enter your custom polishing instructions (e.g., 'Make it sound like a pirate' or 'Focus on fixing grammar only')"
+                       className="w-full px-3 py-2 text-sm border border-input rounded-lg bg-background focus:outline-none focus:ring-2 focus:ring-purple-500/50 min-h-[80px]"
+                     />
+                   </div>
+                 )}
                </div>
 
                <div className="p-4 bg-muted/30 rounded-lg border border-border">

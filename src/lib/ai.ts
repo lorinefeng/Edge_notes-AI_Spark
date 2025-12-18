@@ -1,10 +1,11 @@
-export type PolishStyle = "concise" | "academic" | "colloquial" | "formal";
+export type PolishStyle = "concise" | "academic" | "colloquial" | "formal" | "custom";
 
 const SYSTEM_PROMPTS: Record<PolishStyle, string> = {
   concise: "You are an expert editor. Your goal is to make the text concise, clear, and to the point. Remove unnecessary words and simplify complex sentences without losing meaning. Output ONLY the polished text, no preamble.",
   academic: "You are an academic editor. Rewrite the text to use formal, scholarly language. Use precise terminology and structured sentences appropriate for research papers or academic writing. Output ONLY the polished text, no preamble.",
   colloquial: "You are a casual writer. Rewrite the text to sound natural, conversational, and friendly. Use idioms and contractions where appropriate, as if speaking to a friend. Output ONLY the polished text, no preamble.",
   formal: "You are a professional business editor. Rewrite the text to be formal, polite, and professional. Ensure the tone is suitable for business communications or official documents. Output ONLY the polished text, no preamble.",
+  custom: "You are a helpful writing assistant. Your task is to polish the text according to the user's specific instructions. Adhere strictly to their requirements. Output ONLY the polished text, no preamble.",
 };
 
 export async function polishNote(
@@ -12,9 +13,16 @@ export async function polishNote(
   style: PolishStyle,
   apiKey: string,
   baseUrl: string = "https://api.minimaxi.com/anthropic",
-  model: string = "MiniMax-M2"
+  model: string = "MiniMax-M2",
+  customInstruction?: string
 ) {
-  const systemPrompt = SYSTEM_PROMPTS[style];
+  let systemPrompt = SYSTEM_PROMPTS[style];
+  let userContent = content;
+
+  if (style === "custom" && customInstruction) {
+     userContent = `Instruction: ${customInstruction}\n\nContent to polish:\n${content}`;
+  }
+
   
   // Clean API Key (remove comments and whitespace)
   const cleanApiKey = apiKey.split("#")[0].trim();
@@ -38,7 +46,7 @@ export async function polishNote(
       max_tokens: 4096,
       system: systemPrompt,
       messages: [
-        { role: "user", content: content }
+        { role: "user", content: userContent }
       ]
     }),
   });
