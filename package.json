@@ -11,7 +11,7 @@
     "db:migrate:local": "wrangler d1 migrations apply edge-notes-db --local",
     "build:worker": "opennextjs-cloudflare build",
     "preview": "npm run build:worker && wrangler dev",
-    "deploy": "npm run build:worker && wrangler deploy"
+    "deploy": "opennextjs-cloudflare && wrangler deploy"
   },
   "dependencies": {
     "@opennextjs/cloudflare": "^1.14.6",
