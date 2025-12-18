@@ -60,28 +60,36 @@ export async function polishNote(
   }
 
   // 2. Standard Anthropic Array Format (Robust Check)
-  if (Array.isArray(data.content) && data.content.length > 0) {
-    const firstBlock = data.content[0];
-    
-    // Case A: Array of strings ["text"]
-    if (typeof firstBlock === "string") {
-       return {
-         polishedContent: firstBlock,
-         usage: data.usage || { input_tokens: 0, output_tokens: 0 },
-       };
-    } 
-    
-    // Case B: Array of objects [{ text: "..." }, { content: "..." }]
-    if (firstBlock && typeof firstBlock === "object") {
-       const textCandidate = firstBlock.text || firstBlock.content || firstBlock.value;
-       if (textCandidate && typeof textCandidate === "string") {
-          return {
-            polishedContent: textCandidate,
-            usage: data.usage || { input_tokens: 0, output_tokens: 0 },
-          };
-       }
-    }
-  }
+   if (Array.isArray(data.content) && data.content.length > 0) {
+     // Filter for text blocks, ignoring "thinking" blocks or other types
+     const textBlocks = data.content
+       .filter((block: any) => {
+         // If it's a string, it's text
+         if (typeof block === "string") return true;
+         // If it's an object, it must have 'text' and NOT be a pure thinking block
+         return typeof block === "object" && block.text && !block.thinking;
+       })
+       .map((block: any) => typeof block === "string" ? block : block.text);
+
+     if (textBlocks.length > 0) {
+        return {
+          polishedContent: textBlocks.join("").trim(),
+          usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+        };
+     }
+     
+     // Fallback: If no pure text blocks found, maybe the first block has text mixed with thinking?
+     const firstBlock = data.content[0];
+     if (firstBlock && typeof firstBlock === "object") {
+        const textCandidate = firstBlock.text || firstBlock.content || firstBlock.value;
+        if (textCandidate && typeof textCandidate === "string") {
+           return {
+             polishedContent: textCandidate,
+             usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+           };
+        }
+     }
+   }
 
   // 3. Fallback: OpenAI Format
   if (data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
