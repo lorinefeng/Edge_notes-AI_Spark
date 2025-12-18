@@ -68,3 +68,7 @@ A minimalist note-taking application built with Next.js, Cloudflare Pages, Cloud
 - **Note Detail**: Protected view for note owners.
 - **Public Share**: Publicly accessible unique links for notes marked as public.
 - **Authentication**: GitHub OAuth with secure HTTP-only cookies.
+
+## Deployment Status
+
+This project uses GitHub Actions for automated deployment to Cloudflare Workers.
