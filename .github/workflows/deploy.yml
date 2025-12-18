@@ -39,5 +39,8 @@ jobs:
           echo $GH_CLIENT_SECRET | npx wrangler secret put GITHUB_CLIENT_SECRET
           echo $JWT_SECRET | npx wrangler secret put JWT_SECRET
           
+          # Apply DB Migrations
+          npx wrangler d1 migrations apply edge-notes-db --remote
+
           # Deploy
           npx wrangler deploy
