@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2 } from "lucide-react";
+import { ArrowLeft, Loader2, Save } from "lucide-react";
 
 export default function NewNotePage() {
   const router = useRouter();
@@ -37,64 +37,76 @@ export default function NewNotePage() {
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-6">
-      <div className="mb-6 flex items-center justify-between">
-        <Link href="/" className="flex items-center text-gray-600 hover:text-gray-900">
-          <ArrowLeft className="h-5 w-5 mr-2" />
-          Back to Notes
-        </Link>
-        <h1 className="text-2xl font-bold text-gray-900">Create New Note</h1>
-      </div>
-
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded-lg shadow-sm border">
-        <div>
-          <label className="block text-sm font-medium text-gray-700">Title</label>
-          <input
-            type="text"
-            required
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500"
-            value={formData.title}
-            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          />
-        </div>
-
-        <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Content (Markdown supported)
-          </label>
-          <textarea
-            required
-            rows={10}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 focus:border-blue-500 focus:ring-blue-500 font-mono text-sm"
-            value={formData.content}
-            onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-          />
-        </div>
-
-        <div className="flex items-center">
-          <input
-            id="isPublic"
-            type="checkbox"
-            className="h-4 w-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-            checked={formData.isPublic}
-            onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
-          />
-          <label htmlFor="isPublic" className="ml-2 block text-sm text-gray-900">
-            Make this note public
-          </label>
-        </div>
-
-        <div className="flex justify-end">
-          <button
-            type="submit"
-            disabled={loading}
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50"
+    <div className="min-h-screen pb-20">
+      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="mb-8 flex items-center justify-between">
+          <Link 
+            href="/" 
+            className="flex items-center text-muted-foreground hover:text-primary transition-colors font-medium"
           >
-            {loading && <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />}
-            Create Note
-          </button>
+            <ArrowLeft className="h-4 w-4 mr-2" />
+            Back to Notes
+          </Link>
+          <h1 className="text-2xl font-bold tracking-tight text-foreground">Create New Note</h1>
         </div>
-      </form>
+
+        <form onSubmit={handleSubmit} className="space-y-6 bg-card p-8 rounded-xl border border-border shadow-lg shadow-black/5">
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">Title</label>
+            <input
+              type="text"
+              required
+              placeholder="Give your note a title..."
+              className="block w-full rounded-lg border border-input bg-background/50 px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+              value={formData.title}
+              onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label className="block text-sm font-medium text-foreground">
+              Content <span className="text-muted-foreground font-normal ml-1">(Markdown supported)</span>
+            </label>
+            <textarea
+              required
+              rows={12}
+              placeholder="Write something amazing..."
+              className="block w-full rounded-lg border border-input bg-background/50 px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none font-mono text-sm leading-relaxed resize-y"
+              value={formData.content}
+              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+            />
+          </div>
+
+          <div className="flex items-center pt-2">
+            <label className="flex items-center cursor-pointer group">
+              <input
+                type="checkbox"
+                className="h-4 w-4 rounded border-input text-primary focus:ring-primary/20 cursor-pointer"
+                checked={formData.isPublic}
+                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+              />
+              <span className="ml-2 text-sm text-foreground group-hover:text-primary transition-colors">
+                Make this note public
+              </span>
+            </label>
+          </div>
+
+          <div className="flex justify-end pt-4 border-t border-border/50">
+            <button
+              type="submit"
+              disabled={loading}
+              className="inline-flex items-center px-6 py-2.5 border border-transparent text-sm font-medium rounded-full shadow-lg shadow-primary/25 text-primary-foreground bg-primary hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary disabled:opacity-50 disabled:cursor-not-allowed transition-all active:scale-95"
+            >
+              {loading ? (
+                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
+              ) : (
+                <Save className="h-4 w-4 mr-2" />
+              )}
+              Create Note
+            </button>
+          </div>
+        </form>
+      </div>
     </div>
   );
 }

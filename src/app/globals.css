@@ -15,6 +15,8 @@
   --muted-foreground: #64748b; /* Slate 500 */
   
   --border: #e2e8f0; /* Slate 200 */
+  --input: #e2e8f0;
+  --ring: #2563eb;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -33,6 +35,8 @@
     --muted-foreground: #94a3b8; /* Slate 400 */
     
     --border: #1e293b; /* Slate 800 */
+    --input: #1e293b;
+    --ring: #1d4ed8;
   }
 }
 
@@ -52,6 +56,8 @@ body {
   --color-muted: var(--muted);
   --color-muted-foreground: var(--muted-foreground);
   --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
   
   --font-sans: var(--font-geist-sans);
   --font-mono: var(--font-geist-mono);
