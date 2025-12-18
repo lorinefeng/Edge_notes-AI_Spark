@@ -51,24 +51,39 @@ export async function polishNote(
 
   const data = await response.json() as any;
 
-  // 1. Check for standard Anthropic format (and handle string/object content)
-  if (data.content && Array.isArray(data.content) && data.content.length > 0) {
+  // 1. Direct String Content (Non-standard but possible)
+  if (typeof data.content === "string") {
+    return {
+      polishedContent: data.content,
+      usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+    };
+  }
+
+  // 2. Standard Anthropic Array Format (Robust Check)
+  if (Array.isArray(data.content) && data.content.length > 0) {
     const firstBlock = data.content[0];
+    
+    // Case A: Array of strings ["text"]
     if (typeof firstBlock === "string") {
        return {
          polishedContent: firstBlock,
          usage: data.usage || { input_tokens: 0, output_tokens: 0 },
        };
-    } else if (firstBlock && typeof firstBlock === "object" && "text" in firstBlock) {
-       return {
-         polishedContent: firstBlock.text,
-         usage: data.usage || { input_tokens: 0, output_tokens: 0 },
-       };
+    } 
+    
+    // Case B: Array of objects [{ text: "..." }, { content: "..." }]
+    if (firstBlock && typeof firstBlock === "object") {
+       const textCandidate = firstBlock.text || firstBlock.content || firstBlock.value;
+       if (textCandidate && typeof textCandidate === "string") {
+          return {
+            polishedContent: textCandidate,
+            usage: data.usage || { input_tokens: 0, output_tokens: 0 },
+          };
+       }
     }
   }
 
-  // 2. Fallback: Check for OpenAI format (choices[0].message.content)
-  // Some "compatible" proxies might mix this up
+  // 3. Fallback: OpenAI Format
   if (data.choices && Array.isArray(data.choices) && data.choices[0]?.message?.content) {
     return {
       polishedContent: data.choices[0].message.content,
@@ -76,7 +91,7 @@ export async function polishNote(
     };
   }
 
-  // 3. Fallback: Check for MiniMax native format (reply)
+  // 4. Fallback: MiniMax Native 'reply'
   if (data.reply) {
       return {
           polishedContent: data.reply,
@@ -86,6 +101,14 @@ export async function polishNote(
 
   // If we get here, the format is unrecognized.
   console.error("Unknown AI Response Format:", JSON.stringify(data, null, 2));
-  const receivedKeys = Object.keys(data).join(", ");
-  throw new Error(`Invalid response format from AI API. Received keys: [${receivedKeys}]. Check server logs for full payload.`);
+  
+  // Construct a more helpful error message
+  let detail = "";
+  if (data.content) {
+      detail = `Content field exists but is ${Array.isArray(data.content) ? "an array" : typeof data.content}: ${JSON.stringify(data.content).slice(0, 100)}`;
+  } else {
+      detail = `Keys received: [${Object.keys(data).join(", ")}]`;
+  }
+
+  throw new Error(`Invalid response format. ${detail}`);
 }
