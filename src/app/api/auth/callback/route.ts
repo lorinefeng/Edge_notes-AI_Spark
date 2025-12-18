@@ -14,8 +14,12 @@ export async function GET(req: NextRequest) {
     const accessToken = await exchangeGithubCode(code, env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET);
     const user = await getGithubUser(accessToken);
     
-    // Sign session
-    const token = await signSession({ sub: user.id.toString(), name: user.login }, env.JWT_SECRET);
+    // Sign session with avatar_url
+    const token = await signSession({ 
+      sub: user.id.toString(), 
+      name: user.login,
+      avatar_url: user.avatar_url 
+    }, env.JWT_SECRET);
     
     // Set cookie
     const response = NextResponse.redirect(new URL("/", req.url));

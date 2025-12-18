@@ -1,10 +1,22 @@
 import Link from "next/link";
-import { Plus, Search, Globe, Lock, FileText, Calendar } from "lucide-react";
+import { Plus, Search, Globe, Lock, FileText, Calendar, LogOut, User } from "lucide-react";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
 import { notes } from "@/db/schema";
 import { desc, eq, like, or, and } from "drizzle-orm";
-import { headers } from "next/headers";
+import { headers, cookies } from "next/headers";
+import { verifySession } from "@/lib/auth";
+
+async function getUser() {
+  const { env } = await getCloudflareContext();
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+  
+  if (!token) return null;
+  
+  const payload = await verifySession(token, env.JWT_SECRET);
+  return payload as { sub: string; name: string; avatar_url?: string } | null;
+}
 
 async function getNotes(search?: string) {
   const { env } = await getCloudflareContext();
@@ -35,7 +47,7 @@ async function getNotes(search?: string) {
 export default async function Dashboard(props: { searchParams: Promise<{ q?: string }> }) {
   const searchParams = await props.searchParams;
   const { q } = searchParams;
-  const notesList = await getNotes(q);
+  const [user, notesList] = await Promise.all([getUser(), getNotes(q)]);
 
   return (
     <div className="min-h-screen pb-20">
@@ -50,13 +62,43 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
           </div>
           
           <div className="flex items-center gap-4">
-             <Link
+            <Link
               href="/new"
               className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95"
             >
               <Plus className="h-4 w-4 mr-2" />
               New Note
             </Link>
+
+            {user && (
+              <div className="flex items-center gap-3 pl-4 border-l border-border/50">
+                <div className="flex items-center gap-2">
+                  {user.avatar_url ? (
+                    <img 
+                      src={user.avatar_url} 
+                      alt={user.name} 
+                      className="h-8 w-8 rounded-full border border-border"
+                    />
+                  ) : (
+                    <div className="h-8 w-8 rounded-full bg-muted flex items-center justify-center border border-border">
+                      <User className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                  )}
+                  <span className="text-sm font-medium hidden md:block text-foreground">
+                    {user.name}
+                  </span>
+                </div>
+                <form action="/api/auth/logout" method="POST">
+                  <button 
+                    type="submit"
+                    className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                    title="Sign out"
+                  >
+                    <LogOut className="h-4 w-4" />
+                  </button>
+                </form>
+              </div>
+            )}
           </div>
         </div>
       </header>

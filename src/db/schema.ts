@@ -25,3 +25,19 @@ export const notes = sqliteTable(
     };
   }
 );
+
+export const userQuotas = sqliteTable(
+  "user_quotas",
+  {
+    userId: text("user_id").primaryKey(),
+    dailyCount: integer("daily_count").notNull().default(0),
+    lastResetDate: text("last_reset_date").notNull(),
+    monthlyTokenUsage: integer("monthly_token_usage").notNull().default(0),
+    balance: integer("balance").notNull().default(0),
+    emailAlertSent: integer("email_alert_sent", { mode: "boolean" }).notNull().default(false),
+    updatedAt: integer("updated_at", { mode: "timestamp" })
+      .notNull()
+      .default(sql`(unixepoch())`)
+      .$onUpdate(() => new Date()),
+  }
+);
