@@ -30,7 +30,7 @@ export function AIPolish({ currentContent, onApply }: AIPolishProps) {
       const res = await fetch("/api/ai/polish", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ content: currentContent, style }),
+        body: JSON.stringify({ content: currentContent, style, customInstruction }),
       });
 
       if (res.status === 402) {
