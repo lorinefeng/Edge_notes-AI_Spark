@@ -1,0 +1,3 @@
+GITHUB_CLIENT_ID=your_client_id
+GITHUB_CLIENT_SECRET=your_client_secret
+JWT_SECRET=super_secret_jwt_key

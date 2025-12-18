@@ -1,0 +1,11 @@
+name = "edge-notes"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+main = ".open-next/worker.js"
+assets = { directory = ".open-next/assets", binding = "ASSETS" }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "edge-notes-db"
+database_id = "9481908b-ab0a-41a9-9a0b-cedd9b241491"
+migrations_dir = "drizzle"
