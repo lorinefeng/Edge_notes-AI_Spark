@@ -20,6 +20,9 @@ export async function POST(req: NextRequest) {
     }
 
     const { env } = await getCloudflareContext();
+    if (!env.DB) throw new Error("Database binding (DB) is missing in environment variables");
+    if (!env.ANTHROPIC_API_KEY) throw new Error("ANTHROPIC_API_KEY is missing in environment variables");
+
     const db = drizzle(env.DB);
     
     // Get or Create Quota

@@ -41,8 +41,14 @@ export function AIPolish({ currentContent, onApply }: AIPolishProps) {
       }
       
       if (!res.ok) {
-        const err = await res.json();
-        throw new Error(err.error || "Failed to polish");
+        const contentType = res.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+           const err = await res.json();
+           throw new Error(err.error || "Failed to polish");
+        } else {
+           const text = await res.text();
+           throw new Error(`Server Error: ${text.slice(0, 50)}...`);
+        }
       }
       
       const data = await res.json();
