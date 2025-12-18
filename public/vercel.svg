@@ -1,1 +1,13 @@
-<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000"><path d="m577.3 0 577.4 1000H0z" fill="#fff"/></svg>
+<svg fill="none" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1155 1000">
+  <defs>
+    <linearGradient id="edge_gradient" x1="577.5" y1="0" x2="577.5" y2="1000" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#A855F7" /> <!-- Purple 500 -->
+      <stop offset="1" stop-color="#4F46E5" /> <!-- Indigo 600 -->
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="15" result="blur" />
+      <feComposite in="SourceGraphic" in2="blur" operator="over" />
+    </filter>
+  </defs>
+  <path d="M577.3 0L1154.6 1000H0L577.3 0Z" fill="url(#edge_gradient)" filter="drop-shadow(0px 4px 20px rgba(79, 70, 229, 0.4))" />
+</svg>
