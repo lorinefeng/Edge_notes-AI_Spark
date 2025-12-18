@@ -11,25 +11,30 @@ export async function polishNote(
   content: string,
   style: PolishStyle,
   apiKey: string,
-  baseUrl: string,
-  model: string
+  baseUrl: string = "https://api.minimaxi.com/anthropic",
+  model: string = "MiniMax-M2"
 ) {
   const systemPrompt = SYSTEM_PROMPTS[style];
   
-  // Ensure baseUrl doesn't end with slash if we append /v1...
-  // The provided URL is https://api.minimaxi.com/anthropic
-  // Usually the endpoint is .../v1/messages
-  const endpoint = `${baseUrl.replace(/\/$/, "")}/v1/messages`;
+  // Clean API Key (remove comments and whitespace)
+  const cleanApiKey = apiKey.split("#")[0].trim();
+  
+  // Ensure baseUrl exists and is formatted correctly
+  const safeBaseUrl = (baseUrl || "https://api.minimaxi.com/anthropic").replace(/\/$/, "");
+  const endpoint = `${safeBaseUrl}/v1/messages`;
+  const safeModel = model || "MiniMax-M2";
+
+  console.log(`[AI] Sending request to ${endpoint} with model ${safeModel}`);
 
   const response = await fetch(endpoint, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
+      "Authorization": `Bearer ${cleanApiKey}`,
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: model,
+      model: safeModel,
       max_tokens: 4096,
       system: systemPrompt,
       messages: [

@@ -63,39 +63,51 @@ export async function POST(req: NextRequest) {
     }
 
     // Call AI
-    const { polishedContent, usage } = await polishNote(
-      content,
-      style as PolishStyle,
-      env.ANTHROPIC_API_KEY,
-      env.ANTHROPIC_BASE_URL,
-      env.ANTHROPIC_MODEL
-    );
+    try {
+      const { polishedContent, usage } = await polishNote(
+        content,
+        style as PolishStyle,
+        env.ANTHROPIC_API_KEY,
+        env.ANTHROPIC_BASE_URL || "https://api.minimaxi.com/anthropic",
+        env.ANTHROPIC_MODEL || "MiniMax-M2"
+      );
 
-    // Update Usage
-    const totalTokens = usage.input_tokens + usage.output_tokens;
-    await db.update(userQuotas)
-      .set({
-        dailyCount: useBalance ? quota.dailyCount : quota.dailyCount + 1,
-        balance: useBalance ? quota.balance - 1 : quota.balance,
-        monthlyTokenUsage: quota.monthlyTokenUsage + totalTokens,
-      })
-      .where(eq(userQuotas.userId, userId))
-      .run();
-      
-    // Mock Email Alert Logic
-    const TOKEN_THRESHOLD = 1000000; // 1M tokens
-    if (quota.monthlyTokenUsage + totalTokens > TOKEN_THRESHOLD && !quota.emailAlertSent) {
-      console.warn(`[Alert] User ${userId} exceeded ${TOKEN_THRESHOLD} tokens. Sending email...`);
+      // Update Usage
+      const totalTokens = usage.input_tokens + usage.output_tokens;
       await db.update(userQuotas)
-        .set({ emailAlertSent: true })
+        .set({
+          dailyCount: useBalance ? quota.dailyCount : quota.dailyCount + 1,
+          balance: useBalance ? quota.balance - 1 : quota.balance,
+          monthlyTokenUsage: quota.monthlyTokenUsage + totalTokens,
+        })
         .where(eq(userQuotas.userId, userId))
         .run();
+        
+      // Mock Email Alert Logic
+      const TOKEN_THRESHOLD = 1000000; // 1M tokens
+      if (quota.monthlyTokenUsage + totalTokens > TOKEN_THRESHOLD && !quota.emailAlertSent) {
+        console.warn(`[Alert] User ${userId} exceeded ${TOKEN_THRESHOLD} tokens. Sending email...`);
+        await db.update(userQuotas)
+          .set({ emailAlertSent: true })
+          .where(eq(userQuotas.userId, userId))
+          .run();
+      }
+
+      return NextResponse.json({ polishedContent });
+    } catch (aiError: any) {
+       console.error("AI Service Error:", aiError);
+       return NextResponse.json({ error: `AI Service Failed: ${aiError.message}` }, { status: 502 });
     }
 
-    return NextResponse.json({ polishedContent });
-
   } catch (e: any) {
-    console.error("Polish Error:", e);
-    return NextResponse.json({ error: e.message || "Internal Server Error" }, { status: 500 });
+    console.error("Polish Route Critical Error:", e);
+    // Return text response to ensure visibility if JSON fails
+    return new NextResponse(
+      JSON.stringify({ error: e.message || "Internal Server Error" }), 
+      { 
+        status: 500,
+        headers: { "Content-Type": "application/json" }
+      }
+    );
   }
 }
