@@ -6,6 +6,7 @@ export const notes = sqliteTable(
   {
     id: integer("id").primaryKey({ autoIncrement: true }),
     userId: text("user_id").notNull(),
+    authorName: text("author_name"),
     title: text("title").notNull(),
     content: text("content").notNull(),
     isPublic: integer("is_public", { mode: "boolean" }).notNull().default(false),

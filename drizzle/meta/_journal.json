@@ -15,6 +15,13 @@
       "when": 1766054409282,
       "tag": "0001_loud_bloodstorm",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1766109039375,
+      "tag": "0002_heavy_hellion",
+      "breakpoints": true
     }
   ]
 }

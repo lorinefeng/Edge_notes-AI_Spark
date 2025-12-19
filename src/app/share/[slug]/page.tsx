@@ -26,24 +26,40 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-3xl mx-auto bg-white shadow-lg rounded-xl overflow-hidden">
-        <div className="bg-gray-900 px-8 py-6">
-          <h1 className="text-2xl font-bold text-white">{note.title}</h1>
-          <p className="text-gray-400 text-sm mt-1">
-            Published on {new Date(note.createdAt).toLocaleDateString()}
-          </p>
-        </div>
-        <div className="p-8">
-          <div className="prose max-w-none font-mono whitespace-pre-wrap text-gray-800">
+    <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+      <div className="max-w-3xl w-full pomelli-card rounded-2xl overflow-hidden shadow-2xl relative">
+        {/* Decorative Glow */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-3/4 h-32 bg-primary/20 blur-[60px] pointer-events-none" />
+        
+        <div className="relative z-10 p-8 sm:p-12">
+          <div className="text-center mb-10">
+            <h1 className="text-3xl sm:text-4xl font-bold text-foreground mb-4 font-serif glow-text leading-tight">
+              {note.title}
+            </h1>
+            <div className="flex items-center justify-center gap-4 text-sm text-muted-foreground font-medium">
+              <span>{new Date(note.createdAt).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              <span className="w-1 h-1 rounded-full bg-primary/50" />
+              <span>Public Note</span>
+            </div>
+          </div>
+
+          <div className="prose prose-slate dark:prose-invert max-w-none font-mono text-base leading-relaxed whitespace-pre-wrap text-foreground/90 border-t border-border/50 pt-8">
             {note.content}
           </div>
-        </div>
-        <div className="bg-gray-50 px-8 py-4 border-t border-gray-100 flex justify-between items-center">
-          <span className="text-sm text-gray-500">Edge Notes Share</span>
-          <a href="/" className="text-sm font-medium text-blue-600 hover:text-blue-500">
-            Create your own note &rarr;
-          </a>
+          
+          <div className="mt-12 pt-6 border-t border-border flex justify-between items-end">
+            <div className="flex flex-col">
+              <span className="text-xs text-muted-foreground uppercase tracking-widest mb-1">Published By</span>
+              <span className="text-lg font-serif text-primary italic font-medium">
+                 {note.authorName || "Anonymous Scholar"}
+              </span>
+            </div>
+            
+            <a href="/" className="group flex items-center gap-2 px-5 py-2.5 rounded-full bg-primary/10 hover:bg-primary/20 text-primary text-sm font-medium transition-all">
+              Create your own
+              <span className="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
+            </a>
+          </div>
         </div>
       </div>
     </div>

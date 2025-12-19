@@ -1,0 +1,1 @@
+ALTER TABLE `notes` ADD `author_name` text;

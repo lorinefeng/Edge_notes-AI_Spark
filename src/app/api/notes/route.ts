@@ -14,6 +14,7 @@ const createNoteSchema = z.object({
 
 export async function POST(req: NextRequest) {
   const userId = req.headers.get("x-user-id");
+  const userName = req.headers.get("x-user-name"); // Get username from headers
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
@@ -32,6 +33,7 @@ export async function POST(req: NextRequest) {
 
     const result = await db.insert(notes).values({
       userId,
+      authorName: userName || "Anonymous", // Save author name
       title: body.title,
       content: body.content,
       isPublic: body.isPublic,

@@ -16,6 +16,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
   const params = await props.params;
   const noteId = parseInt(params.id);
   const userId = req.headers.get("x-user-id");
+  const userName = req.headers.get("x-user-name"); // Get user name for updates if needed
 
   if (!userId) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -51,6 +52,7 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
         title: body.title,
         content: body.content,
         isPublic: body.isPublic,
+        authorName: userName || existingNote.authorName, // Update author name if available, else keep existing
         slug,
         updatedAt: new Date(), // Manually update this since D1/SQLite behavior can vary
       })
