@@ -136,7 +136,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
             <Link
               key={note.id}
               href={`/note/${note.id}`}
-              className="group block bg-card rounded-xl border border-border p-6 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
+              className="group block bg-card backdrop-blur-md rounded-xl border border-border p-6 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
             >
               <div className="flex items-start justify-between mb-4">
                 <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
