@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Calendar, Edit2, Trash2, Loader2, Save, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { AIPolish } from "@/components/ai-polish";
+import { MarkdownViewer } from "@/components/markdown-viewer";
 
 // Client Component for interactivity
 export function NoteActions({ note }: { note: any }) {
@@ -171,9 +172,7 @@ export function NoteActions({ note }: { note: any }) {
 
       {/* Article Body */}
       <div className="p-8">
-        <div className="prose prose-slate dark:prose-invert max-w-none font-mono text-sm leading-relaxed whitespace-pre-wrap text-foreground">
-          {note.content}
-        </div>
+        <MarkdownViewer content={note.content} className="text-foreground font-mono text-sm leading-relaxed" />
       </div>
     </article>
   );

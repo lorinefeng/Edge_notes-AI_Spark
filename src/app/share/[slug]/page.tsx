@@ -3,6 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
 import { notes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
+import { MarkdownViewer } from "@/components/markdown-viewer";
 
 async function getPublicNote(slug: string) {
   const { env } = await getCloudflareContext();
@@ -43,8 +44,8 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
             </div>
           </div>
 
-          <div className="prose prose-slate dark:prose-invert max-w-none font-mono text-base leading-relaxed whitespace-pre-wrap text-foreground/90 border-t border-border/50 pt-8">
-            {note.content}
+          <div className="border-t border-border/50 pt-8">
+            <MarkdownViewer content={note.content} className="text-foreground/90 font-mono text-base leading-relaxed" />
           </div>
           
           <div className="mt-12 pt-6 border-t border-border flex justify-between items-end">
