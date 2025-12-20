@@ -58,7 +58,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
             <div className="bg-primary/10 p-2 rounded-lg">
               <FileText className="h-6 w-6 text-primary" />
             </div>
-            <h1 className="text-xl font-bold tracking-tight">Edge Notes</h1>
+            <h1 className="text-xl font-bold tracking-tight">Edge Notes AI Spark</h1>
           </div>
           
           <div className="flex items-center gap-4">

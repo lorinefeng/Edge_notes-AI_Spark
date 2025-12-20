@@ -108,8 +108,8 @@ export function AIPolish({ currentContent, onApply }: AIPolishProps) {
               <Wand2 className="h-5 w-5" />
             </div>
             <div>
-              <h3 className="text-lg font-bold text-foreground">AI Polish</h3>
-              <p className="text-sm text-muted-foreground">Enhance your writing with AI</p>
+              <h3 className="text-lg font-bold text-foreground">AI Spark</h3>
+              <p className="text-sm text-muted-foreground">Spark your thoughts with AI magic</p>
             </div>
           </div>
           <button onClick={() => setIsOpen(false)} className="text-muted-foreground hover:text-foreground">

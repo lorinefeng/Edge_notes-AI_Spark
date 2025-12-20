@@ -19,7 +19,7 @@ const playfair = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Edge Notes",
+  title: "Edge Notes AI Spark",
   description: "A minimalist, AI-powered digital garden.",
 };
 

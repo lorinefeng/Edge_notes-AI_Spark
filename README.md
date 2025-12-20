@@ -5,6 +5,7 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg) ![Build Status](https://img.shields.io/badge/build-passing-brightgreen) ![AI Powered](https://img.shields.io/badge/AI-Powered-purple)
 
 **Edge Notes** is a modern note-taking application built for speed and intelligence. Deployed on the edge with Cloudflare, it offers a seamless writing experience enhanced by advanced AI capabilities.
+![alt text](059b785125aef215028ebf638fb8ae8b.png)
 
 ---
 
@@ -29,9 +30,9 @@
 - Support for **Markdown** syntax (headers, lists, code blocks, etc.).
 - Auto-saving interface ensuring you never lose your ideas.
 
-### 3. ✨ AI Polish (The Magic!)
-Enhance your writing with our integrated AI (MiniMax M2 model):
-- Click the **"✨ AI Polish"** button in the editor.
+### 3. ⚡ AI Spark
+Stuck on a sentence? Hit the Spark button and let AI ignite your writing flow. (MiniMax M2 model):
+- Click the **"✨ AI Spark"** button in the editor.
 - **Choose a Style**:
   - 🤏 **Concise**: Make it short and sweet.
   - 🎓 **Academic**: Formal and scholarly tone.
@@ -39,7 +40,7 @@ Enhance your writing with our integrated AI (MiniMax M2 model):
   - 👔 **Formal**: Professional business tone.
   - 🎨 **Custom**: Tell the AI exactly what you want! (e.g., "Rewrite this like Shakespeare")
 - **Diff View**: Review changes in a GitHub-style "before & after" view before applying.
-- **Quota**: 5 free AI polishes per day!
+- **Quota**: 5 free AI sparks per day!
 
 ### 4. 🌍 Share with the World
 - Toggle the **Public** switch to generate a unique sharing link.
