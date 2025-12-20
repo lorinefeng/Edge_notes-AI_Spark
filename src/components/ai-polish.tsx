@@ -93,7 +93,7 @@ export function AIPolish({ currentContent, onApply }: AIPolishProps) {
         className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-full shadow-sm text-white bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-all transform hover:scale-105"
       >
         <Sparkles className="h-4 w-4 mr-2" />
-        AI Polish
+        AI Spark✨
       </button>
     );
   }
