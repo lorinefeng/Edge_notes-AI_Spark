@@ -4,12 +4,14 @@ import { drizzle } from "drizzle-orm/d1";
 import { userQuotas } from "@/db/schema";
 import { eq } from "drizzle-orm";
 import { polishNote, PolishStyle } from "@/lib/ai";
+import { getCurrentUser } from "@/lib/auth";
 
 export async function POST(req: NextRequest) {
-  const userId = req.headers.get("x-user-id");
-  if (!userId) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.sub;
 
   try {
     const { content, style, customInstruction } = await req.json();
@@ -95,14 +97,22 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ polishedContent });
     } catch (aiError: any) {
        console.error("AI Service Error:", aiError);
-       return NextResponse.json({ error: `AI Service Failed: ${aiError.message}` }, { status: 502 });
+       // Sanitize error message in production
+       const message = process.env.NODE_ENV === "production" 
+         ? "AI Service temporarily unavailable. Please try again." 
+         : `AI Service Failed: ${aiError.message}`;
+       return NextResponse.json({ error: message }, { status: 502 });
     }
 
   } catch (e: any) {
     console.error("Polish Route Critical Error:", e);
-    // Return text response to ensure visibility if JSON fails
+    // Sanitize error message in production
+    const message = process.env.NODE_ENV === "production" 
+      ? "Internal Server Error" 
+      : e.message || "Internal Server Error";
+      
     return new NextResponse(
-      JSON.stringify({ error: e.message || "Internal Server Error" }), 
+      JSON.stringify({ error: message }), 
       { 
         status: 500,
         headers: { "Content-Type": "application/json" }

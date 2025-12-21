@@ -5,6 +5,7 @@ import { notes } from "@/db/schema";
 import { eq, and } from "drizzle-orm";
 import { z } from "zod";
 import { nanoid } from "nanoid";
+import { getCurrentUser } from "@/lib/auth";
 
 const updateNoteSchema = z.object({
   title: z.string().min(1),
@@ -15,12 +16,13 @@ const updateNoteSchema = z.object({
 export async function PUT(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const noteId = parseInt(params.id);
-  const userId = req.headers.get("x-user-id");
-  const userName = req.headers.get("x-user-name"); // Get user name for updates if needed
+  const user = await getCurrentUser();
 
-  if (!userId) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.sub;
+  const userName = user.name;
 
   if (isNaN(noteId)) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });
@@ -68,11 +70,12 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
 export async function DELETE(req: NextRequest, props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const noteId = parseInt(params.id);
-  const userId = req.headers.get("x-user-id");
+  const user = await getCurrentUser();
 
-  if (!userId) {
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.sub;
 
   if (isNaN(noteId)) {
     return NextResponse.json({ error: "Invalid ID" }, { status: 400 });

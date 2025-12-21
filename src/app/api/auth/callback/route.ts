@@ -5,9 +5,11 @@ import { exchangeGithubCode, getGithubUser, signSession } from "@/lib/auth";
 export async function GET(req: NextRequest) {
   const { env } = await getCloudflareContext();
   const code = req.nextUrl.searchParams.get("code");
+  const state = req.nextUrl.searchParams.get("state");
+  const storedState = req.cookies.get("oauth_state")?.value;
   
-  if (!code) {
-    return NextResponse.json({ error: "Missing code" }, { status: 400 });
+  if (!code || !state || !storedState || state !== storedState) {
+    return NextResponse.json({ error: "Invalid state or code" }, { status: 400 });
   }
 
   try {
@@ -25,10 +27,14 @@ export async function GET(req: NextRequest) {
     const response = NextResponse.redirect(new URL("/", req.url));
     response.cookies.set("session", token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
+      secure: process.env.NODE_ENV === "production" || req.url.startsWith("https"),
       path: "/",
       maxAge: 60 * 60 * 24 * 7, // 7 days
+      sameSite: "lax",
     });
+    
+    // Clear state cookie
+    response.cookies.delete("oauth_state");
     
     return response;
   } catch (error: any) {

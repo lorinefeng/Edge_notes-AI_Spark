@@ -1,4 +1,6 @@
 import { SignJWT, jwtVerify } from "jose";
+import { cookies } from "next/headers";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 const ALG = "HS256";
 
@@ -20,6 +22,27 @@ export async function verifySession(token: string, secret: string) {
     return payload;
   } catch (e) {
     return null;
+  }
+}
+
+export async function getCurrentUser() {
+  const cookieStore = await cookies();
+  const token = cookieStore.get("session")?.value;
+  
+  if (!token) return null;
+
+  try {
+    const { env } = await getCloudflareContext();
+    const secret = env.JWT_SECRET || process.env.JWT_SECRET || "";
+    if (!secret) return null;
+    
+    const payload = await verifySession(token, secret);
+    return payload as { sub: string; name: string; avatar_url?: string } | null;
+  } catch (e) {
+    // Fallback for local dev if getCloudflareContext fails or other errors
+    const secret = process.env.JWT_SECRET || "";
+    if (!secret) return null;
+    return await verifySession(token, secret) as { sub: string; name: string; avatar_url?: string } | null;
   }
 }
 

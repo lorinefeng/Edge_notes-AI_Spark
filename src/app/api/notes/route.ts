@@ -5,6 +5,7 @@ import { notes } from "@/db/schema";
 import { desc, eq, like, or, and } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
+import { getCurrentUser } from "@/lib/auth";
 
 const createNoteSchema = z.object({
   title: z.string().min(1),
@@ -13,11 +14,12 @@ const createNoteSchema = z.object({
 });
 
 export async function POST(req: NextRequest) {
-  const userId = req.headers.get("x-user-id");
-  const userName = req.headers.get("x-user-name"); // Get username from headers
-  if (!userId) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.sub;
+  const userName = user.name;
 
   const { env } = await getCloudflareContext();
   const db = drizzle(env.DB);
@@ -47,10 +49,11 @@ export async function POST(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
-  const userId = req.headers.get("x-user-id");
-  if (!userId) {
+  const user = await getCurrentUser();
+  if (!user) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
+  const userId = user.sub;
 
   const { env } = await getCloudflareContext();
   const db = drizzle(env.DB);

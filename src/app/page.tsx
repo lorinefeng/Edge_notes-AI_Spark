@@ -4,27 +4,15 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
 import { notes } from "@/db/schema";
 import { desc, eq, like, or, and } from "drizzle-orm";
-import { headers, cookies } from "next/headers";
-import { verifySession } from "@/lib/auth";
-
-async function getUser() {
-  const { env } = await getCloudflareContext();
-  const cookieStore = await cookies();
-  const token = cookieStore.get("session")?.value;
-  
-  if (!token) return null;
-  
-  const payload = await verifySession(token, env.JWT_SECRET);
-  return payload as { sub: string; name: string; avatar_url?: string } | null;
-}
+import { headers } from "next/headers";
+import { getCurrentUser } from "@/lib/auth";
 
 async function getNotes(search?: string) {
-  const { env } = await getCloudflareContext();
-  const headerList = await headers();
-  const userId = headerList.get("x-user-id");
-  
-  if (!userId) return []; 
+  const user = await getCurrentUser();
+  if (!user) return [];
+  const userId = user.sub;
 
+  const { env } = await getCloudflareContext();
   const db = drizzle(env.DB);
   
   let whereClause = eq(notes.userId, userId);
@@ -47,7 +35,7 @@ async function getNotes(search?: string) {
 export default async function Dashboard(props: { searchParams: Promise<{ q?: string }> }) {
   const searchParams = await props.searchParams;
   const { q } = searchParams;
-  const [user, notesList] = await Promise.all([getUser(), getNotes(q)]);
+  const [user, notesList] = await Promise.all([getCurrentUser(), getNotes(q)]);
 
   return (
     <div className="min-h-screen pb-20">
