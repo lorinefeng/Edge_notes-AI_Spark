@@ -7,7 +7,7 @@ import { AIPolish } from "@/components/ai-polish";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 
 // Client Component for interactivity
-export function NoteActions({ note }: { note: any }) {
+export function NoteActions({ note, isAuthor }: { note: any, isAuthor: boolean }) {
   const router = useRouter();
   const [isEditing, setIsEditing] = useState(false);
   const [loading, setLoading] = useState(false);
