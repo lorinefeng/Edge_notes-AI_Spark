@@ -1,30 +1,46 @@
 import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
-import { notes } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { notes, noteComments, noteViews } from "@/db/schema";
+import { eq, and, desc } from "drizzle-orm";
 import { MarkdownViewer } from "@/components/markdown-viewer";
-
-async function getPublicNote(slug: string) {
-  const { env } = await getCloudflareContext();
-  const db = drizzle(env.DB);
-  
-  // Boundary Check: Must be public and match slug
-  const note = await db.select().from(notes).where(
-    and(eq(notes.slug, slug), eq(notes.isPublic, true))
-  ).get();
-
-  return note;
-}
+import { SocialInteractions } from "@/components/social-interactions";
+import { getCurrentUser } from "@/lib/auth";
 
 export default async function PublicSharePage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
   const { slug } = params;
-  const note = await getPublicNote(slug);
+  const { env } = await getCloudflareContext();
+  const db = drizzle(env.DB);
+  const user = await getCurrentUser();
+
+  // 1. Fetch Note
+  const note = await db.select().from(notes).where(
+    and(eq(notes.slug, slug), eq(notes.isPublic, true))
+  ).get();
 
   if (!note) {
     notFound();
   }
+
+  // 2. Fetch Comments
+  const comments = await db.select()
+    .from(noteComments)
+    .where(eq(noteComments.noteId, note.id))
+    .orderBy(desc(noteComments.createdAt))
+    .all();
+
+  // 3. Fetch Recent Visitors (Distinct by hash roughly)
+  // Since Drizzle's D1 adapter might have limited groupBy support in type safety, we'll fetch recent and filter in JS or just fetch last 10
+  const recentViews = await db.select()
+    .from(noteViews)
+    .where(eq(noteViews.noteId, note.id))
+    .orderBy(desc(noteViews.createdAt))
+    .limit(20)
+    .all();
+  
+  // Deduplicate visitors in JS for display
+  const uniqueVisitors = Array.from(new Map(recentViews.map(v => [v.visitorHash, v])).values()).slice(0, 5);
 
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
@@ -61,6 +77,22 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
               <span className="group-hover:translate-x-0.5 transition-transform">&rarr;</span>
             </a>
           </div>
+
+          {/* Social Interactions Section */}
+          <SocialInteractions
+            slug={slug}
+            initialLikeCount={note.likeCount || 0}
+            initialViewCount={note.viewCount || 0}
+            initialComments={comments.map(c => ({
+              ...c,
+              createdAt: c.createdAt.toISOString()
+            }))}
+            initialVisitors={uniqueVisitors.map(v => ({
+              visitorHash: v.visitorHash || "unknown",
+              location: v.location || undefined
+            }))}
+            currentUser={user}
+          />
         </div>
       </div>
     </div>

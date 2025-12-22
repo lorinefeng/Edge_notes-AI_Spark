@@ -25,7 +25,16 @@ export async function verifySession(token: string, secret: string) {
   }
 }
 
-export async function getCurrentUser() {
+export type UserRole = "user" | "guest" | "admin";
+
+export type SessionUser = {
+  sub: string;
+  name: string;
+  avatar_url?: string;
+  role: UserRole;
+};
+
+export async function getCurrentUser(): Promise<SessionUser | null> {
   const cookieStore = await cookies();
   const token = cookieStore.get("session")?.value;
   
@@ -37,12 +46,44 @@ export async function getCurrentUser() {
     if (!secret) return null;
     
     const payload = await verifySession(token, secret);
-    return payload as { sub: string; name: string; avatar_url?: string } | null;
+    if (!payload) return null;
+
+    const name = payload.name as string;
+    const sub = payload.sub as string;
+    let role: UserRole = (payload.role as UserRole) || "user";
+
+    // Admin Override
+    if (name === "lorinefeng") {
+      role = "admin";
+    }
+
+    return {
+      sub,
+      name,
+      avatar_url: payload.avatar_url as string,
+      role
+    };
   } catch (e) {
     // Fallback for local dev if getCloudflareContext fails or other errors
     const secret = process.env.JWT_SECRET || "";
     if (!secret) return null;
-    return await verifySession(token, secret) as { sub: string; name: string; avatar_url?: string } | null;
+    const payload = await verifySession(token, secret);
+    if (!payload) return null;
+
+    const name = payload.name as string;
+    const sub = payload.sub as string;
+    let role: UserRole = (payload.role as UserRole) || "user";
+
+    if (name === "lorinefeng") {
+      role = "admin";
+    }
+
+    return {
+      sub,
+      name,
+      avatar_url: payload.avatar_url as string,
+      role
+    };
   }
 }
 

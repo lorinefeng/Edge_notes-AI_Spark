@@ -18,6 +18,9 @@ export const notes = sqliteTable(
       .notNull()
       .default(sql`(unixepoch())`)
       .$onUpdate(() => new Date()),
+    viewCount: integer("view_count").notNull().default(0),
+    likeCount: integer("like_count").notNull().default(0),
+    commentCount: integer("comment_count").notNull().default(0),
   },
   (table) => {
     return {
@@ -41,4 +44,51 @@ export const userQuotas = sqliteTable(
       .default(sql`(unixepoch())`)
       .$onUpdate(() => new Date()),
   }
+);
+
+export const noteViews = sqliteTable(
+  "note_views",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    noteId: integer("note_id").notNull(), // Foreign key to notes.id
+    userId: text("user_id"), // Nullable (for guests)
+    visitorHash: text("visitor_hash"), // IP-based hash for uniqueness check
+    location: text("location"), // "Beijing, China"
+    createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    noteIdIdx: index("views_note_id_idx").on(table.noteId),
+  })
+);
+
+export const noteLikes = sqliteTable(
+  "note_likes",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    noteId: integer("note_id").notNull(),
+    userId: text("user_id"), // Nullable
+    ipAddress: text("ip_address"), // For abuse prevention
+    createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    noteIdIdx: index("likes_note_id_idx").on(table.noteId),
+    userIdIdx: index("likes_user_id_idx").on(table.userId),
+    ipAddressIdx: index("likes_ip_address_idx").on(table.ipAddress),
+  })
+);
+
+export const noteComments = sqliteTable(
+  "note_comments",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    noteId: integer("note_id").notNull(),
+    userId: text("user_id"), // Nullable
+    guestName: text("guest_name"), // "Visitor from..." or Custom Nickname
+    content: text("content").notNull(),
+    isAnonymous: integer("is_anonymous", { mode: "boolean" }).default(false),
+    createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+  },
+  (table) => ({
+    noteIdIdx: index("comments_note_id_idx").on(table.noteId),
+  })
 );
