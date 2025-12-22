@@ -140,23 +140,25 @@ export function NoteActions({ note }: { note: any }) {
           <h1 className="text-3xl font-bold tracking-tight text-foreground mb-4 leading-tight flex-1">
             {note.title}
           </h1>
-          <div className="flex items-center gap-2 shrink-0">
-            <button
-              onClick={() => setIsEditing(true)}
-              className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
-              title="Edit Note"
-            >
-              <Edit2 className="h-4 w-4" />
-            </button>
-            <button
-              onClick={handleDelete}
-              disabled={loading}
-              className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
-              title="Delete Note"
-            >
-              {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-            </button>
-          </div>
+          {isAuthor && (
+            <div className="flex items-center gap-2 shrink-0">
+              <button
+                onClick={() => setIsEditing(true)}
+                className="p-2 text-muted-foreground hover:text-primary hover:bg-primary/10 rounded-full transition-colors"
+                title="Edit Note"
+              >
+                <Edit2 className="h-4 w-4" />
+              </button>
+              <button
+                onClick={handleDelete}
+                disabled={loading}
+                className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
+                title="Delete Note"
+              >
+                {loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+              </button>
+            </div>
+          )}
         </div>
         
         <div className="flex items-center text-sm text-muted-foreground">

@@ -1,34 +1,81 @@
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
-import { notes } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
-import { headers } from "next/headers";
+import { notes, noteComments, noteViews, noteLikes } from "@/db/schema";
+import { eq, and, desc, or } from "drizzle-orm";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Globe, Share2 } from "lucide-react";
 import { NoteActions } from "@/components/note-actions";
-
-async function getNote(id: number) {
-  const { env } = await getCloudflareContext();
-  const headerList = await headers();
-  const userId = headerList.get("x-user-id");
-  if (!userId) return null;
-
-  const db = drizzle(env.DB);
-  const note = await db.select().from(notes).where(
-    and(eq(notes.id, id), eq(notes.userId, userId))
-  ).get();
-
-  return note;
-}
+import { SocialInteractions } from "@/components/social-interactions";
+import { getCurrentUser } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function NoteDetailPage(props: { params: Promise<{ id: string }> }) {
   const params = await props.params;
   const id = parseInt(params.id);
   if (isNaN(id)) notFound();
 
-  const note = await getNote(id);
+  const user = await getCurrentUser();
+  const userId = user?.sub;
+  
+  const { env } = await getCloudflareContext();
+  const db = drizzle(env.DB);
+
+  // 1. Fetch Note
+  // Allow if Author OR Public
+  // We can't use simple AND because of the OR condition, so we fetch first then check, OR use OR in query
+  // simpler to query by ID first
+  const note = await db.select().from(notes).where(eq(notes.id, id)).get();
+
   if (!note) notFound();
+
+  const isAuthor = userId === note.userId;
+  
+  // Access Control
+  if (!isAuthor && !note.isPublic) {
+    // If not author and not public, deny access
+    // But if we are admin, maybe allow? (User requested Admin role)
+    // User said "Admin can delete comments...", didn't say Admin can see private notes.
+    // I'll stick to strict Author/Public for now.
+    notFound(); 
+  }
+
+  // 2. Fetch Interactions (if public or author viewing)
+  // We fetch these to display in SocialInteractions
+  
+  // Comments
+  const comments = await db.select()
+    .from(noteComments)
+    .where(eq(noteComments.noteId, note.id))
+    .orderBy(desc(noteComments.createdAt))
+    .all();
+
+  // Recent Views
+  const recentViews = await db.select()
+    .from(noteViews)
+    .where(eq(noteViews.noteId, note.id))
+    .orderBy(desc(noteViews.createdAt))
+    .limit(20)
+    .all();
+  
+  const uniqueVisitors = Array.from(new Map(recentViews.map(v => [v.visitorHash, v])).values()).slice(0, 5);
+
+  // Check if liked by current user
+  let isLiked = false;
+  if (userId) {
+    const likeRecord = await db.select().from(noteLikes).where(
+      and(eq(noteLikes.noteId, note.id), eq(noteLikes.userId, userId))
+    ).get();
+    isLiked = !!likeRecord;
+  } else {
+    // Guest check by IP?
+    const headerList = await headers();
+    const ip = headerList.get("cf-connecting-ip") || "unknown";
+    const likeRecord = await db.select().from(noteLikes).where(
+        and(eq(noteLikes.noteId, note.id), eq(noteLikes.ipAddress, ip))
+    ).get();
+    isLiked = !!likeRecord;
+  }
 
   return (
     <div className="min-h-screen pb-20">
@@ -65,8 +112,37 @@ export default async function NoteDetailPage(props: { params: Promise<{ id: stri
           </div>
         </div>
 
-        {/* Client Component for Actions */}
-        <NoteActions note={note} />
+        {/* Note Content / Actions */}
+        <NoteActions note={note} isAuthor={isAuthor} />
+
+        {/* Social Interactions (Only for Public Notes or Author viewing their own Public Note?)
+            User said "Note page... needs to implement like, comment..."
+            Usually comments are for public notes. Private notes don't need comments?
+            If I am author of a PRIVATE note, do I want comments? No.
+            So only show if note.isPublic is true.
+        */}
+        {note.isPublic && note.slug && (
+            <div className="mt-8 pt-8 border-t border-border/50">
+                <SocialInteractions
+                    slug={note.slug}
+                    initialLikeCount={note.likeCount || 0}
+                    initialViewCount={note.viewCount || 0}
+                    initialComments={comments.map(c => ({
+                        ...c,
+                        guestName: c.guestName || "Anonymous",
+                        createdAt: c.createdAt ? c.createdAt.toISOString() : new Date().toISOString(),
+                        isAnonymous: c.isAnonymous ?? false,
+                        userId: c.userId || undefined
+                    }))}
+                    initialVisitors={uniqueVisitors.map(v => ({
+                        visitorHash: v.visitorHash || "unknown",
+                        location: v.location || undefined
+                    }))}
+                    initialIsLiked={isLiked}
+                    currentUser={user}
+                />
+            </div>
+        )}
       </div>
     </div>
   );

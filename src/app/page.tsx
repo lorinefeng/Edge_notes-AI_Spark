@@ -15,7 +15,15 @@ async function getNotes(search?: string) {
   const { env } = await getCloudflareContext();
   const db = drizzle(env.DB);
   
-  let whereClause = eq(notes.userId, userId);
+  let whereClause;
+
+  if (user.role === 'guest') {
+     // Guests see ALL public notes
+     whereClause = eq(notes.isPublic, true);
+  } else {
+     // Users see their own notes (both public and private)
+     whereClause = eq(notes.userId, userId);
+  }
   
   if (search) {
     whereClause = and(
@@ -37,6 +45,8 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
   const { q } = searchParams;
   const [user, notesList] = await Promise.all([getCurrentUser(), getNotes(q)]);
 
+  const isGuest = user?.role === 'guest';
+
   return (
     <div className="min-h-screen pb-20">
       {/* Navbar */}
@@ -50,13 +60,15 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
           </div>
           
           <div className="flex items-center gap-4">
-            <Link
-              href="/new"
-              className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95"
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              New Note
-            </Link>
+            {!isGuest && (
+              <Link
+                href="/new"
+                className="hidden sm:inline-flex items-center px-4 py-2 rounded-full bg-primary text-primary-foreground text-sm font-medium hover:opacity-90 transition-all shadow-lg shadow-primary/25 active:scale-95"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                New Note
+              </Link>
+            )}
 
             {user && (
               <div className="flex items-center gap-3 pl-4 border-l border-border/50">
@@ -92,6 +104,14 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
       </header>
 
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Welcome Section for Guests */}
+        {isGuest && (
+            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 to-blue-500/10 border border-primary/20">
+                <h2 className="text-2xl font-bold mb-2">Welcome to the Public Garden</h2>
+                <p className="text-muted-foreground">You are browsing public notes from our community. Sign in to create your own.</p>
+            </div>
+        )}
+
         {/* Search Section */}
         <div className="mb-10 max-w-2xl mx-auto">
           <div className="relative group">
@@ -103,20 +123,22 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
                 type="text"
                 name="q"
                 defaultValue={q}
-                placeholder="Search your thoughts..."
+                placeholder={isGuest ? "Search public notes..." : "Search your thoughts..."}
                 className="block w-full rounded-full border border-border bg-card py-3 pl-12 pr-4 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all shadow-sm"
               />
             </form>
           </div>
         </div>
 
-        {/* Mobile FAB */}
-        <Link
-          href="/new"
-          className="fixed bottom-6 right-6 sm:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25 z-40 active:scale-95 transition-transform"
-        >
-          <Plus className="h-6 w-6" />
-        </Link>
+        {/* Mobile FAB (Hide for guests) */}
+        {!isGuest && (
+          <Link
+            href="/new"
+            className="fixed bottom-6 right-6 sm:hidden h-14 w-14 rounded-full bg-primary text-primary-foreground flex items-center justify-center shadow-lg shadow-primary/25 z-40 active:scale-95 transition-transform"
+          >
+            <Plus className="h-6 w-6" />
+          </Link>
+        )}
 
         {/* Notes Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -148,9 +170,14 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
                 {note.content || "No content..."}
               </p>
               
-              <div className="flex items-center text-xs text-muted-foreground pt-4 border-t border-border/50">
-                <Calendar className="h-3 w-3 mr-1.5" />
-                <span>{new Date(note.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+              <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/50">
+                 <div className="flex items-center">
+                    <Calendar className="h-3 w-3 mr-1.5" />
+                    <span>{new Date(note.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                 </div>
+                 {isGuest && note.authorName && (
+                     <span className="italic text-primary/70">{note.authorName}</span>
+                 )}
               </div>
             </Link>
           ))}
@@ -164,9 +191,9 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
             </div>
             <h3 className="text-lg font-medium text-foreground mb-2">No notes found</h3>
             <p className="text-muted-foreground max-w-sm mx-auto mb-8">
-              {q ? `We couldn't find anything matching "${q}".` : "Your digital garden is empty. Start planting some ideas."}
+              {q ? `We couldn't find anything matching "${q}".` : (isGuest ? "No public notes available yet." : "Your digital garden is empty. Start planting some ideas.")}
             </p>
-            {!q && (
+            {!q && !isGuest && (
                <Link
                 href="/new"
                 className="inline-flex items-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-all"

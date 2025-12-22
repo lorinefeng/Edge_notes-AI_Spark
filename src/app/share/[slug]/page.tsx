@@ -1,11 +1,12 @@
 import { notFound } from "next/navigation";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
-import { notes, noteComments, noteViews } from "@/db/schema";
+import { notes, noteComments, noteViews, noteLikes } from "@/db/schema";
 import { eq, and, desc } from "drizzle-orm";
 import { MarkdownViewer } from "@/components/markdown-viewer";
 import { SocialInteractions } from "@/components/social-interactions";
 import { getCurrentUser } from "@/lib/auth";
+import { headers } from "next/headers";
 
 export default async function PublicSharePage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params;
@@ -13,6 +14,7 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
   const { env } = await getCloudflareContext();
   const db = drizzle(env.DB);
   const user = await getCurrentUser();
+  const userId = user?.sub;
 
   // 1. Fetch Note
   const note = await db.select().from(notes).where(
@@ -41,6 +43,23 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
   
   // Deduplicate visitors in JS for display
   const uniqueVisitors = Array.from(new Map(recentViews.map(v => [v.visitorHash, v])).values()).slice(0, 5);
+
+  // 4. Check if liked
+  let isLiked = false;
+  if (userId) {
+    const likeRecord = await db.select().from(noteLikes).where(
+      and(eq(noteLikes.noteId, note.id), eq(noteLikes.userId, userId))
+    ).get();
+    isLiked = !!likeRecord;
+  } else {
+    // Guest check by IP
+    const headerList = await headers();
+    const ip = headerList.get("cf-connecting-ip") || "unknown";
+    const likeRecord = await db.select().from(noteLikes).where(
+        and(eq(noteLikes.noteId, note.id), eq(noteLikes.ipAddress, ip))
+    ).get();
+    isLiked = !!likeRecord;
+  }
 
   return (
     <div className="min-h-screen bg-background py-12 px-4 sm:px-6 lg:px-8 flex items-center justify-center">
@@ -94,6 +113,7 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
               visitorHash: v.visitorHash || "unknown",
               location: v.location || undefined
             }))}
+            initialIsLiked={isLiked}
             currentUser={user}
           />
         </div>

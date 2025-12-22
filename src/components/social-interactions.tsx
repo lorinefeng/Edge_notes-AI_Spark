@@ -24,6 +24,7 @@ interface SocialProps {
   initialViewCount: number;
   initialComments: Comment[];
   initialVisitors: Visitor[]; // Just hashes or names for now
+  initialIsLiked?: boolean;
   currentUser: any; // { role: 'admin' | 'user' | 'guest', sub: string, name: string } | null
 }
 
@@ -33,13 +34,14 @@ export function SocialInteractions({
   initialViewCount,
   initialComments,
   initialVisitors,
+  initialIsLiked = false,
   currentUser,
 }: SocialProps) {
   const [likes, setLikes] = useState(initialLikeCount);
   const [views, setViews] = useState(initialViewCount);
   const [comments, setComments] = useState<Comment[]>(initialComments);
   const [visitors, setVisitors] = useState<Visitor[]>(initialVisitors);
-  const [isLiked, setIsLiked] = useState(false); // We don't know initially unless we check API, or assume false
+  const [isLiked, setIsLiked] = useState(initialIsLiked);
   const [commentText, setCommentText] = useState("");
   const [loadingComment, setLoadingComment] = useState(false);
   const router = useRouter();
