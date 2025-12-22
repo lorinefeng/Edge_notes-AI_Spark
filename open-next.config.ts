@@ -1,7 +1,3 @@
 import { defineCloudflareConfig } from "@opennextjs/cloudflare";
 
-export default defineCloudflareConfig({
-  build: {
-    minify: true,
-  },
-});
+export default defineCloudflareConfig();

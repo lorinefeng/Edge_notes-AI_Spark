@@ -3,9 +3,28 @@
 import { useEffect, useState } from "react";
 import { marked } from "marked";
 import DOMPurify from "dompurify";
-import hljs from "highlight.js";
-import "highlight.js/styles/github-dark.css"; // Code block theme
-import "github-markdown-css/github-markdown.css"; // Markdown body styles
+import hljs from "highlight.js/lib/core";
+import javascript from "highlight.js/lib/languages/javascript";
+import typescript from "highlight.js/lib/languages/typescript";
+import python from "highlight.js/lib/languages/python";
+import bash from "highlight.js/lib/languages/bash";
+import json from "highlight.js/lib/languages/json";
+import sql from "highlight.js/lib/languages/sql";
+import css from "highlight.js/lib/languages/css";
+import xml from "highlight.js/lib/languages/xml"; // Handles HTML
+import "highlight.js/styles/github-dark.css";
+import "github-markdown-css/github-markdown.css";
+
+// Register only common languages to save bundle size (crucial for Cloudflare Workers limit)
+hljs.registerLanguage("javascript", javascript);
+hljs.registerLanguage("typescript", typescript);
+hljs.registerLanguage("python", python);
+hljs.registerLanguage("bash", bash);
+hljs.registerLanguage("json", json);
+hljs.registerLanguage("sql", sql);
+hljs.registerLanguage("css", css);
+hljs.registerLanguage("xml", xml);
+hljs.registerLanguage("html", xml);
 
 interface MarkdownViewerProps {
   content: string;
@@ -16,17 +35,8 @@ export function MarkdownViewer({ content, className = "" }: MarkdownViewerProps)
   const [html, setHtml] = useState("");
 
   useEffect(() => {
-    // Configure marked to use highlight.js
-    const renderer = new marked.Renderer();
-    
-    // Custom logic to handle code blocks with highlighting
-    // Note: marked 4+ handles this differently, but we can use useEffect to highlight after render
-    // or use marked-highlight if we wanted a plugin. For simplicity/robustness without plugins:
-    
     async function parseMarkdown() {
         const rawHtml = await marked.parse(content, { async: true });
-        
-        // Sanitize
         const cleanHtml = DOMPurify.sanitize(rawHtml);
         setHtml(cleanHtml);
     }
@@ -34,7 +44,6 @@ export function MarkdownViewer({ content, className = "" }: MarkdownViewerProps)
     parseMarkdown();
   }, [content]);
 
-  // Apply syntax highlighting after HTML update
   useEffect(() => {
     document.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightElement(block as HTMLElement);
@@ -44,7 +53,7 @@ export function MarkdownViewer({ content, className = "" }: MarkdownViewerProps)
   return (
     <div 
       className={`markdown-body ${className}`} 
-      style={{ backgroundColor: 'transparent' }} // Override github-markdown-css bg
+      style={{ backgroundColor: 'transparent' }} 
       dangerouslySetInnerHTML={{ __html: html }} 
     />
   );
