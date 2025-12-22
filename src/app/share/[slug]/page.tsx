@@ -85,7 +85,10 @@ export default async function PublicSharePage(props: { params: Promise<{ slug: s
             initialViewCount={note.viewCount || 0}
             initialComments={comments.map(c => ({
               ...c,
-              createdAt: c.createdAt.toISOString()
+              guestName: c.guestName || "Anonymous", // Ensure guestName is not null
+              createdAt: c.createdAt ? c.createdAt.toISOString() : new Date().toISOString(), // Ensure createdAt is string and not null
+              isAnonymous: c.isAnonymous ?? false, // Provide default value for potentially null boolean
+              userId: c.userId || undefined // Ensure userId is string or undefined (not null)
             }))}
             initialVisitors={uniqueVisitors.map(v => ({
               visitorHash: v.visitorHash || "unknown",
