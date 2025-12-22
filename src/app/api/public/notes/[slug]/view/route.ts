@@ -31,17 +31,16 @@ export async function POST(req: NextRequest, props: { params: Promise<{ slug: st
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const visitorHash = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
-    // 2. Check if already viewed recently (optional, skipping complex logic for now, just record)
-    // To avoid spamming the views table, maybe check if a view exists from this hash in the last hour?
-    // Let's keep it simple: Record view + Increment Counter.
+    // 2. Check if already viewed recently
+    // created_at is stored as integer (seconds from unixepoch) in SQLite by default via default(sql`(unixepoch())`)
+    // We calculate threshold in seconds.
+    const oneHourAgoSeconds = Math.floor((Date.now() - 60 * 60 * 1000) / 1000);
     
-    // Check duplication for today to avoid F5 spamming view count too much
-    const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000);
     const recentView = await db.select().from(noteViews).where(
       and(
         eq(noteViews.noteId, note.id),
         eq(noteViews.visitorHash, visitorHash),
-        sql`created_at > ${oneHourAgo}`
+        sql`created_at > ${oneHourAgoSeconds}`
       )
     ).get();
 

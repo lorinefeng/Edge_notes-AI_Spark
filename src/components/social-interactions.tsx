@@ -51,9 +51,8 @@ export function SocialInteractions({
     const recordView = async () => {
       try {
         await fetch(`/api/public/notes/${slug}/view`, { method: "POST" });
-        // We could update view count here if the API returns it, but for now we just rely on initial or refresh
-        // Actually, let's just increment locally to show "alive"
-        // setViews(v => v + 1); 
+        // Optimistically increment view count to show liveliness
+        setViews(v => v + 1); 
       } catch (e) {
         console.error(e);
       }
@@ -123,7 +122,7 @@ export function SocialInteractions({
   };
 
   return (
-    <div className="mt-12 space-y-8">
+    <div className="mt-12 p-6 sm:p-8 rounded-2xl bg-card/80 backdrop-blur-md border border-border shadow-lg space-y-8">
       {/* Stats Bar */}
       <div className="flex items-center justify-between border-y border-border/50 py-4">
         <div className="flex items-center gap-6 text-muted-foreground">
