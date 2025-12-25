@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { Heart, MessageSquare, Eye, Send, Trash2, User as UserIcon, Paperclip, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFileUpload } from "@/hooks/use-file-upload";
+import { MarkdownViewer } from "@/components/markdown-viewer";
 
 interface Comment {
   id: number;
@@ -299,9 +300,9 @@ export function SocialInteractions({
                     </button>
                   )}
                 </div>
-                <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">
-                  {comment.content}
-                </p>
+                <div className="text-sm text-foreground/80 leading-relaxed">
+                  <MarkdownViewer content={comment.content} className="!text-sm !bg-transparent" />
+                </div>
               </div>
             </div>
           ))}
