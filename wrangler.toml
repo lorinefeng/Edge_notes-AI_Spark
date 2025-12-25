@@ -9,3 +9,7 @@ binding = "DB"
 database_name = "edge-notes-db"
 database_id = "9481908b-ab0a-41a9-9a0b-cedd9b241491"
 migrations_dir = "drizzle"
+
+[[r2_buckets]]
+binding = "STORAGE"
+bucket_name = "edge-notes-storage"

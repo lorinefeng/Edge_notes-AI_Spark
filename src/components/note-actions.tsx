@@ -162,7 +162,7 @@ export function NoteActions({ note, isAuthor }: { note: any, isAuthor: boolean }
                 onDrop={handleDrop}
                 onDragOver={(e) => e.preventDefault()}
               />
-              <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute bottom-3 right-3 flex items-center gap-2 transition-opacity">
                 <input
                   type="file"
                   ref={fileInputRef}

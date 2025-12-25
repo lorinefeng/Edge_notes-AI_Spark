@@ -1,8 +1,9 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { Heart, MessageSquare, Eye, Send, Trash2, User as UserIcon } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Heart, MessageSquare, Eye, Send, Trash2, User as UserIcon, Paperclip, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 interface Comment {
   id: number;
@@ -45,6 +46,9 @@ export function SocialInteractions({
   const [commentText, setCommentText] = useState("");
   const [loadingComment, setLoadingComment] = useState(false);
   const router = useRouter();
+  const { uploadFile, isUploading } = useFileUpload();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // 1. Record View on Mount
   useEffect(() => {
@@ -121,6 +125,65 @@ export function SocialInteractions({
     }
   };
 
+  // 5. File Upload Logic
+  const insertAtCursor = (text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+
+    const newValue = value.substring(0, start) + text + value.substring(end);
+    setCommentText(newValue);
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + text.length, start + text.length);
+    }, 0);
+  };
+
+  const handleUpload = async (file: File) => {
+    const id = Math.random().toString(36).substring(7);
+    const placeholder = `![Uploading ${file.name}...](${id})`;
+    insertAtCursor(placeholder);
+    
+    const markdown = await uploadFile(file);
+    if (markdown) {
+      setCommentText(prev => prev.replace(placeholder, markdown));
+    } else {
+      setCommentText(prev => prev.replace(placeholder, "[Upload Failed]"));
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          await handleUpload(file);
+        }
+      }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await handleUpload(files[0]);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await handleUpload(e.target.files[0]);
+      e.target.value = "";
+    }
+  };
+
   return (
     <div className="mt-12 p-6 sm:p-8 rounded-2xl bg-card/80 backdrop-blur-md border border-border shadow-lg space-y-8">
       {/* Stats Bar */}
@@ -169,18 +232,39 @@ export function SocialInteractions({
         {/* Comment Form */}
         <form onSubmit={handleComment} className="relative">
           <textarea
+            ref={textareaRef}
             value={commentText}
             onChange={(e) => setCommentText(e.target.value)}
+            onPaste={handlePaste}
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
             placeholder={currentUser ? "Write a thought..." : "Write a thought as Guest..."}
             className="w-full bg-muted/30 border border-border rounded-xl p-4 pr-12 min-h-[100px] focus:ring-2 focus:ring-primary/50 focus:outline-none resize-none"
           />
-          <button
-            type="submit"
-            disabled={loadingComment || !commentText.trim()}
-            className="absolute bottom-4 right-4 p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
-          >
-            <Send className="w-4 h-4" />
-          </button>
+          <div className="absolute bottom-4 right-4 flex items-center gap-2">
+            <input
+              type="file"
+              ref={fileInputRef}
+              className="hidden"
+              onChange={handleFileSelect}
+            />
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="p-2 bg-background/80 hover:bg-muted rounded-lg text-muted-foreground hover:text-primary transition-colors border border-border/50 shadow-sm"
+              title="Attach file"
+            >
+              {isUploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Paperclip className="w-4 h-4" />}
+            </button>
+            <button
+              type="submit"
+              disabled={loadingComment || !commentText.trim()}
+              className="p-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 disabled:opacity-50 transition-colors"
+            >
+              <Send className="w-4 h-4" />
+            </button>
+          </div>
         </form>
 
         {/* Comment List */}
