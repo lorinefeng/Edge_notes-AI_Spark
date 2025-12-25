@@ -1,18 +1,87 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
-import { ArrowLeft, Loader2, Save } from "lucide-react";
+import { ArrowLeft, Loader2, Save, Paperclip } from "lucide-react";
+import { useFileUpload } from "@/hooks/use-file-upload";
 
 export default function NewNotePage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const { uploadFile, isUploading } = useFileUpload();
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
   const [formData, setFormData] = useState({
     title: "",
     content: "",
     isPublic: false,
   });
+
+  const insertAtCursor = (text: string) => {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const value = textarea.value;
+
+    const newValue = value.substring(0, start) + text + value.substring(end);
+    setFormData(prev => ({ ...prev, content: newValue }));
+    
+    setTimeout(() => {
+      textarea.focus();
+      textarea.setSelectionRange(start + text.length, start + text.length);
+    }, 0);
+  };
+
+  const handleUpload = async (file: File) => {
+    const id = Math.random().toString(36).substring(7);
+    const placeholder = `![Uploading ${file.name}...](${id})`;
+    insertAtCursor(placeholder);
+    
+    const markdown = await uploadFile(file);
+    if (markdown) {
+      setFormData(prev => ({
+        ...prev,
+        content: prev.content.replace(placeholder, markdown)
+      }));
+    } else {
+      setFormData(prev => ({
+        ...prev,
+        content: prev.content.replace(placeholder, "[Upload Failed]")
+      }));
+    }
+  };
+
+  const handlePaste = async (e: React.ClipboardEvent) => {
+    const items = e.clipboardData.items;
+    for (const item of items) {
+      if (item.kind === "file") {
+        const file = item.getAsFile();
+        if (file) {
+          e.preventDefault();
+          await handleUpload(file);
+        }
+      }
+    }
+  };
+
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    const files = e.dataTransfer.files;
+    if (files.length > 0) {
+      await handleUpload(files[0]);
+    }
+  };
+
+  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      await handleUpload(e.target.files[0]);
+      e.target.value = "";
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,14 +136,37 @@ export default function NewNotePage() {
             <label className="block text-sm font-medium text-foreground">
               Content <span className="text-muted-foreground font-normal ml-1">(Markdown supported)</span>
             </label>
-            <textarea
-              required
-              rows={12}
-              placeholder="Write something amazing..."
-              className="block w-full rounded-lg border border-input bg-background/50 px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none font-mono text-sm leading-relaxed resize-y"
-              value={formData.content}
-              onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-            />
+            <div className="relative group">
+              <textarea
+                ref={textareaRef}
+                required
+                rows={12}
+                placeholder="Write something amazing..."
+                className="block w-full rounded-lg border border-input bg-background/50 px-4 py-3 text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none font-mono text-sm leading-relaxed resize-y"
+                value={formData.content}
+                onChange={(e) => setFormData({ ...formData, content: e.target.value })}
+                onPaste={handlePaste}
+                onDrop={handleDrop}
+                onDragOver={(e) => e.preventDefault()}
+              />
+              <div className="absolute bottom-3 right-3 flex items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                <input
+                  type="file"
+                  ref={fileInputRef}
+                  className="hidden"
+                  onChange={handleFileSelect}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="p-1.5 bg-background/80 hover:bg-muted rounded-md text-muted-foreground hover:text-primary transition-colors border border-border/50 shadow-sm backdrop-blur-sm"
+                  title="Attach file"
+                >
+                  {isUploading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Paperclip className="h-4 w-4" />}
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="flex items-center pt-2">

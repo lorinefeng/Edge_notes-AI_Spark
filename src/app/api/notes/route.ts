@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
-import { notes } from "@/db/schema";
-import { desc, eq, like, or, and } from "drizzle-orm";
+import { notes, noteFiles } from "@/db/schema";
+import { desc, eq, like, or, and, inArray } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import { z } from "zod";
 import { getCurrentUser } from "@/lib/auth";
@@ -42,7 +42,22 @@ export async function POST(req: NextRequest) {
       slug,
     }).returning();
 
-    return NextResponse.json(result[0]);
+    const note = result[0];
+
+    // Link files found in content
+    const fileIds = [...body.content.matchAll(/\/api\/file\/(\d+)/g)].map(m => parseInt(m[1]));
+    if (fileIds.length > 0) {
+      await db.update(noteFiles)
+        .set({ noteId: note.id })
+        .where(
+           and(
+             inArray(noteFiles.id, fileIds),
+             eq(noteFiles.userId, userId)
+           )
+        );
+    }
+
+    return NextResponse.json(note);
   } catch (e: any) {
     return NextResponse.json({ error: e.message }, { status: 400 });
   }

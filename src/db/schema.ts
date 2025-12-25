@@ -92,3 +92,14 @@ export const noteComments = sqliteTable(
     noteIdIdx: index("comments_note_id_idx").on(table.noteId),
   })
 );
+
+export const noteFiles = sqliteTable("note_files", {
+  id: integer("id").primaryKey({ autoIncrement: true }),
+  noteId: integer("note_id"), // Can be null if uploaded before note creation
+  userId: text("user_id").notNull(),
+  r2Key: text("r2_key").notNull(),
+  fileName: text("file_name").notNull(),
+  contentType: text("content_type").notNull(),
+  size: integer("size").notNull(),
+  createdAt: integer("created_at", { mode: "timestamp" }).default(sql`(unixepoch())`),
+});

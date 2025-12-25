@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
-import { notes } from "@/db/schema";
-import { eq, and } from "drizzle-orm";
+import { notes, noteFiles } from "@/db/schema";
+import { eq, and, inArray } from "drizzle-orm";
 import { z } from "zod";
 import { nanoid } from "nanoid";
 import { getCurrentUser } from "@/lib/auth";
@@ -60,6 +60,19 @@ export async function PUT(req: NextRequest, props: { params: Promise<{ id: strin
       })
       .where(and(eq(notes.id, noteId), eq(notes.userId, userId)))
       .returning();
+
+    // Link files found in content
+    const fileIds = [...body.content.matchAll(/\/api\/file\/(\d+)/g)].map(m => parseInt(m[1]));
+    if (fileIds.length > 0) {
+      await db.update(noteFiles)
+        .set({ noteId: noteId })
+        .where(
+           and(
+             inArray(noteFiles.id, fileIds),
+             eq(noteFiles.userId, userId)
+           )
+        );
+    }
 
     return NextResponse.json(result[0]);
   } catch (e: any) {
