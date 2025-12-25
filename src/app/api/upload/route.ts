@@ -7,10 +7,8 @@ import { nanoid } from "nanoid";
 
 export async function POST(req: NextRequest) {
   const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-  const userId = user.sub;
+  // Allow guests to upload, use "guest" as userId if not logged in
+  const userId = user ? user.sub : "guest";
 
   const formData = await req.formData();
   const file = formData.get("file");

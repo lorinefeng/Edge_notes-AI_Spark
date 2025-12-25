@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { drizzle } from "drizzle-orm/d1";
-import { notes, noteComments } from "@/db/schema";
-import { eq, desc, sql } from "drizzle-orm";
+import { notes, noteComments, noteFiles } from "@/db/schema";
+import { eq, desc, sql, inArray, and } from "drizzle-orm";
 import { getCurrentUser } from "@/lib/auth";
 import { z } from "zod";
 
@@ -65,6 +65,14 @@ export async function POST(req: NextRequest, props: { params: Promise<{ slug: st
       content: body.content,
       isAnonymous,
     }).returning();
+
+    // Link uploaded files in comment to the note
+    const fileIds = [...body.content.matchAll(/\/api\/file\/(\d+)/g)].map(m => parseInt(m[1]));
+    if (fileIds.length > 0) {
+      await db.update(noteFiles)
+        .set({ noteId: note.id })
+        .where(inArray(noteFiles.id, fileIds));
+    }
 
     // Increment comment count
     await db.update(notes)
