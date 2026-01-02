@@ -6,6 +6,7 @@ import { notes } from "@/db/schema";
 import { desc, eq, like, or, and } from "drizzle-orm";
 import { headers } from "next/headers";
 import { getCurrentUser } from "@/lib/auth";
+import { NoteCard } from "@/components/note-card";
 
 async function getNotes(search?: string) {
   const user = await getCurrentUser();
@@ -14,17 +15,17 @@ async function getNotes(search?: string) {
 
   const { env } = await getCloudflareContext();
   const db = drizzle(env.DB);
-  
+
   let whereClause;
 
   if (user.role === 'guest') {
-     // Guests see ALL public notes
-     whereClause = eq(notes.isPublic, true);
+    // Guests see ALL public notes
+    whereClause = eq(notes.isPublic, true);
   } else {
-     // Users see their own notes (both public and private)
-     whereClause = eq(notes.userId, userId);
+    // Users see their own notes (both public and private)
+    whereClause = eq(notes.userId, userId);
   }
-  
+
   if (search) {
     whereClause = and(
       whereClause,
@@ -58,7 +59,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
             </div>
             <h1 className="text-xl font-bold tracking-tight">Edge Notes AI Spark</h1>
           </div>
-          
+
           <div className="flex items-center gap-4">
             {!isGuest && (
               <Link
@@ -74,9 +75,9 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
               <div className="flex items-center gap-3 pl-4 border-l border-border/50">
                 <div className="flex items-center gap-2">
                   {user.avatar_url ? (
-                    <img 
-                      src={user.avatar_url} 
-                      alt={user.name} 
+                    <img
+                      src={user.avatar_url}
+                      alt={user.name}
                       className="h-8 w-8 rounded-full border border-border"
                     />
                   ) : (
@@ -89,7 +90,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
                   </span>
                 </div>
                 <form action="/api/auth/logout" method="POST">
-                  <button 
+                  <button
                     type="submit"
                     className="p-2 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 rounded-full transition-colors"
                     title="Sign out"
@@ -106,10 +107,10 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
       <main className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Welcome Section for Guests */}
         {isGuest && (
-            <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 to-blue-500/10 border border-primary/20">
-                <h2 className="text-2xl font-bold mb-2">Welcome to the Public Garden</h2>
-                <p className="text-muted-foreground">You are browsing public notes from our community. Sign in to create your own.</p>
-            </div>
+          <div className="mb-8 p-6 rounded-2xl bg-gradient-to-r from-primary/10 to-blue-500/10 border border-primary/20">
+            <h2 className="text-2xl font-bold mb-2">Welcome to the Public Garden</h2>
+            <p className="text-muted-foreground">You are browsing public notes from our community. Sign in to create your own.</p>
+          </div>
         )}
 
         {/* Search Section */}
@@ -143,43 +144,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
         {/* Notes Grid */}
         <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
           {notesList.map((note) => (
-            <Link
-              key={note.id}
-              href={`/note/${note.id}`}
-              className="group block bg-card backdrop-blur-md rounded-xl border border-border p-6 hover:border-primary/50 hover:shadow-lg hover:-translate-y-1 transition-all duration-300"
-            >
-              <div className="flex items-start justify-between mb-4">
-                <div className="p-2 rounded-lg bg-muted group-hover:bg-primary/10 transition-colors">
-                  <FileText className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
-                </div>
-                {note.isPublic ? (
-                  <div className="flex items-center px-2 py-1 rounded-full bg-green-500/10 text-green-600 text-xs font-medium border border-green-500/20">
-                    <Globe className="h-3 w-3 mr-1" />
-                    Public
-                  </div>
-                ) : (
-                  <Lock className="h-4 w-4 text-muted-foreground/50" />
-                )}
-              </div>
-              
-              <h2 className="text-lg font-semibold text-foreground mb-2 line-clamp-1 group-hover:text-primary transition-colors">
-                {note.title || "Untitled Note"}
-              </h2>
-              
-              <p className="text-muted-foreground text-sm line-clamp-3 mb-4 leading-relaxed h-[4.5em]">
-                {note.content || "No content..."}
-              </p>
-              
-              <div className="flex items-center justify-between text-xs text-muted-foreground pt-4 border-t border-border/50">
-                 <div className="flex items-center">
-                    <Calendar className="h-3 w-3 mr-1.5" />
-                    <span>{new Date(note.createdAt).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
-                 </div>
-                 {isGuest && note.authorName && (
-                     <span className="italic text-primary/70">{note.authorName}</span>
-                 )}
-              </div>
-            </Link>
+            <NoteCard key={note.id} note={note} isGuest={isGuest} />
           ))}
         </div>
 
@@ -194,7 +159,7 @@ export default async function Dashboard(props: { searchParams: Promise<{ q?: str
               {q ? `We couldn't find anything matching "${q}".` : (isGuest ? "No public notes available yet." : "Your digital garden is empty. Start planting some ideas.")}
             </p>
             {!q && !isGuest && (
-               <Link
+              <Link
                 href="/new"
                 className="inline-flex items-center px-6 py-3 rounded-full bg-primary text-primary-foreground font-medium hover:opacity-90 transition-all"
               >
